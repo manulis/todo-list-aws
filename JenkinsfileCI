@@ -26,17 +26,7 @@ pipeline{
             }
         }
         
-        stage('Rest Test'){
-            steps{
 
-            }
-        }
-        
-        stage('Promote'){
-            steps{
-
-            }
-        }
         
         stage('Clean'){
             steps {
