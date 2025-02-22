@@ -54,7 +54,7 @@ pipeline{
 
 
                     sh 'git config --global user.email "jenkins@gmail.com"'
-                    sh 'git config --global user.name "Jenkins CI"'
+                    sh 'git config --global user.name "manulis"'
 
 
                     sh "git checkout ${branch}"
