@@ -1,9 +1,6 @@
 pipeline{
     agent any
 
-    environment {
-        BASE_URL = "https://z2ylg7xxf3.execute-api.us-east-1.amazonaws.com/Prod"
-    }
     
     stages{
         stage('Get Code'){
@@ -48,6 +45,18 @@ pipeline{
                     set -e
 
                 """
+
+                def stackOutputs = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs' --output json", returnStdout: true).trim()
+                
+
+                echo "Outputs del stack: ${stackOutputs}"
+                
+
+                def baseUrl = sh(script: "echo '${stackOutputs}' | jq -r '.[] | select(.OutputKey==\"BaseUrlApi\") | .OutputValue'", returnStdout: true).trim()
+
+                env.BASE_URL = baseUrl
+
+                echo "Base URL: ${env.BASE_URL}"
             }
         }
         stage('Rest Test'){
