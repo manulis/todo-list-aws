@@ -2,7 +2,7 @@ pipeline{
     agent any
 
     environment {
-        API_URL = "https://z2ylg7xxf3.execute-api.us-east-1.amazonaws.com/Prod"
+        BASE_URL = "https://z2ylg7xxf3.execute-api.us-east-1.amazonaws.com/Prod"
     }
     
     stages{
