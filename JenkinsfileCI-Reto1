@@ -1,5 +1,9 @@
 pipeline{
     agent any
+
+    environment {
+        BASE_URL = "https://z2ylg7xxf3.execute-api.us-east-1.amazonaws.com/Prod"
+    }
     
     stages{
         stage('Get Code'){
@@ -10,6 +14,7 @@ pipeline{
         stage('Static Test') {
             steps {
                 script {
+                    
                     sh 'python3 -m flake8 --exit-zero --format=pylint src > flake8.out'
                     recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [
                         [threshold: 8, type: 'TOTAL', unstable: true],
@@ -38,6 +43,8 @@ pipeline{
                                 --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
                                 --s3-prefix todo-list-aws \
                                 --no-confirm-changeset
+                                --stack-name todo-list-aws-staging \
+                                --config-env staging
                     set -e
 
                 """
@@ -77,6 +84,7 @@ pipeline{
                             sh "git status"
                             sh "git add -A"
                             sh 'git commit -m "CI"'
+                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
                             sh "git checkout master"
                             sh 'git merge develop -m "[UP] Promocionando cambios a master"'
                             sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
