@@ -66,7 +66,6 @@ pipeline{
 
                             def timestamp = sh(script: "date '+%Y-%m-%d %H:%M:%S'", returnStdout: true).trim()
 
-                            sh "git checkout master"
 
                             sh """
                                 echo "=========================" >> ci-promote.log
@@ -80,6 +79,9 @@ pipeline{
                             sh "git status"
                             sh "git add -A"
                             sh 'git commit -m "CI"'
+                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
+                            sh "git checkout master"
+                            sh 'git merge develop -m "[UP] Promocionando cambios a master"'
                             sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
                         }
                     }
