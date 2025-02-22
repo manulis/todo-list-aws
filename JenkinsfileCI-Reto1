@@ -47,12 +47,12 @@ pipeline{
                 junit 'result-rest.xml'
             }
         }
-        stage('Promote') {
+       stage('Promote') {
             steps {
                 script {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         withCredentials([usernamePassword(credentialsId: 'git-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                            def encodedPassword = URLEncoder.encode("$GIT_PASSWORD",'UTF-8')
+                            def encodedPassword = URLEncoder.encode("$GIT_PASSWORD", 'UTF-8')
                             sh "git config user.email manulisdesable@gmail.com"
                             sh "git config user.name manulis"
                             sh "git status"
@@ -61,7 +61,8 @@ pipeline{
                             sh "git status"
                             sh "git checkout master"
                             sh 'git merge develop -m "Promoting changes from develop to master"'
-                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/${GIT_URL}"
+
+                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/${GIT_URL}.git"
                         }
                     }
                 }
