@@ -62,7 +62,7 @@ pipeline{
                             sh "git checkout master"
                             sh 'git merge develop -m "[UP] Promocionando cambias a master"'
 
-                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/${GIT_URL}.git"
+                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
                         }
                     }
                 }
