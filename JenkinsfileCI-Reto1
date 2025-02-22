@@ -57,10 +57,10 @@ pipeline{
                             sh "git config user.name manulis"
                             sh "git status"
                             sh "git add -A"
-                            sh 'git commit -m "CI COMPLETED"'
+                            sh 'git commit -m "CI"'
                             sh "git status"
                             sh "git checkout master"
-                            sh 'git merge develop -m "Promoting changes from develop to master"'
+                            sh 'git merge develop -m "[UP] Promocionando cambias a master"'
 
                             sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/${GIT_URL}.git"
                         }
