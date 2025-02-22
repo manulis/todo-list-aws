@@ -56,9 +56,9 @@ pipeline{
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         withCredentials([usernamePassword(credentialsId: 'git-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                             def encodedPassword = URLEncoder.encode("$GIT_PASSWORD", 'UTF-8')
-                            sh 'echo $RANDOM" >> CI.log'
                             sh "git config user.email manulisdesable@gmail.com"
                             sh "git config user.name manulis"
+                            sh "echo $RANDOM > CI.log"
                             sh "git status"
                             sh "git add -A"
                             sh 'git commit -m "CI"'
