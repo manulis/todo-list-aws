@@ -25,16 +25,19 @@ pipeline{
         }
         stage('Deploy'){
             steps {
-                sh """
-                    sam build
-                    sam deploy --config-file samconfig.toml \
-                        --config-env production \
-                        --no-confirm-changeset \
-                        --no-disable-rollback \
-                        --no-fail-on-empty-changeset \
-                        --resolve-s3
+                sh '''
 
-                """
+                    sam build
+
+
+                    sam deploy --stack-name todo-list-aws \
+                                --region us-east-1 \
+                                --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
+                                --s3-prefix todo-list-aws \
+                                --no-confirm-changeset
+                    
+
+                '''
             }
         }
         stage('Rest Test'){
