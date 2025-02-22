@@ -47,6 +47,27 @@ pipeline{
                 junit 'result-rest.xml'
             }
         }
+        stage('Promote') {
+            steps {
+                script {
+                    def branch = "master"
+
+
+                    sh 'git config --global user.email "jenkins@gmail.com"'
+                    sh 'git config --global user.name "Jenkins CI"'
+
+
+                    sh "git checkout ${branch}"
+                    sh "git pull origin ${branch}"
+
+                    sh "git merge --no-ff ${env.GIT_BRANCH}"
+
+
+                    sh "git push origin ${branch}"
+                }
+            }
+        }
+
         stage('Clean'){
             steps {
                 cleanWs()
