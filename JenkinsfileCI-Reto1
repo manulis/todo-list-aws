@@ -29,16 +29,16 @@ pipeline{
             steps {
                 sh """
 
-                    sam build
+                    export AWS_DEFAULT_REGION=us-east-1 && \
+                    sam build && \
+                    sam validate --lint && \
+                    sam deploy --force-upload \
+                            --no-confirm-changeset \
+                            --no-fail-on-empty-changeset \
+                            --stack-name staging \
+                            --config-env staging \
+                            --resolve-s3
 
-
-                    set +e
-                    sam deploy --stack-name todo-list-aws \
-                                --region us-east-1 \
-                                --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
-                                --s3-prefix todo-list-aws \
-                                --no-confirm-changeset
-                    set -e
 
                 """
             }
