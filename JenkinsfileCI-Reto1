@@ -26,18 +26,13 @@ pipeline{
         stage('Deploy'){
             steps {
                 sh """
-
                     sam build
-
-                    sed -i 's/resolve_s3 = true/resolve_s3 = false/' samconfig.toml
-
-                    set +e
-                    sam deploy --stack-name todo-list-aws \
-                                --region us-east-1 \
-                                --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
-                                --s3-prefix todo-list-aws \
-                                --no-confirm-changeset
-                    set -e
+                    sam deploy --config-file samconfig.toml \
+                        --config-env production \
+                        --no-confirm-changeset \
+                        --no-disable-rollback \
+                        --no-fail-on-empty-changeset \
+                        --resolve-s3
 
                 """
             }
