@@ -4,6 +4,12 @@ pipeline {
     stages {
         stage('Get Code') {
             steps {
+                sh '''
+                    echo "Get Code Agent"
+                    whoami
+                    hostname
+                    echo ${WORKSPACE}
+                '''
                 git branch: 'develop', url: 'https://github.com/manulis/todo-list-aws'
             }
         }
@@ -12,6 +18,12 @@ pipeline {
             agent { label 'agent1' }
             steps {
                 script {
+                    sh '''
+                        echo "Static Test Agent"
+                        whoami
+                        hostname
+                        echo ${WORKSPACE}
+                    '''
                     sh 'python3 -m flake8 --exit-zero --format=pylint src > flake8.out'
                     recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [
                         [threshold: 8, type: 'TOTAL', unstable: true],
@@ -32,6 +44,12 @@ pipeline {
             agent { label 'agent2' }
             steps {
                 script {
+                    sh '''
+                        echo "Deploy Agent"
+                        whoami
+                        hostname
+                        echo ${WORKSPACE}
+                    '''
                     sh """
                         set +e
                         sam deploy --stack-name todo-list-aws \
@@ -64,6 +82,12 @@ pipeline {
             agent { label 'agent1' }
             steps {
                 script {
+                    sh '''
+                        echo "Rest Test Agent"
+                        whoami
+                        hostname
+                        echo ${WORKSPACE}
+                    '''
                     
                     unstash 'base_url_stash'
                     def baseUrl = readFile('base_url.txt').trim()
@@ -83,6 +107,13 @@ pipeline {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         withCredentials([usernamePassword(credentialsId: 'git-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                             def encodedPassword = URLEncoder.encode("$GIT_PASSWORD", 'UTF-8')
+
+                            sh '''
+                                echo "Promote Agent"
+                                whoami
+                                hostname
+                                echo ${WORKSPACE}
+                            '''
 
                             sh "git config user.email manulisdesable@gmail.com"
                             sh "git config user.name manulis"
