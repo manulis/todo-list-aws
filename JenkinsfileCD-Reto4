@@ -12,6 +12,10 @@ pipeline {
             steps {
                 script {
                     sh """
+                        git clone -b staging --single-branch https://github.com/manulis/todo-list-aws-config
+
+                        mv todo-list-aws-config/samconfig.toml .
+
                         sam build
 
                         set +e
@@ -31,6 +35,12 @@ pipeline {
                     def baseUrl = sh(script: "echo '${stackOutputs}' | jq -r '.[] | select(.OutputKey==\"BaseUrlApi\") | .OutputValue'", returnStdout: true).trim()
                     env.BASE_URL = baseUrl
                     echo "Base URL: ${env.BASE_URL}"
+                    
+                    sh '''
+                        rm -rf samconfig.toml
+                        rm -r todo-list-aws-config
+                    
+                    '''
                 }
             }
         }
