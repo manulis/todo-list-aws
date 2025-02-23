@@ -25,7 +25,7 @@ pipeline {
                         set -e
                     """
                     
-                    def stackOutputs = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs' --output json", returnStdout: true).trim()
+                    def stackOutputs = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-production --query 'Stacks[0].Outputs' --output json", returnStdout: true).trim()
                     echo "Outputs del stack: ${stackOutputs}"
 
                     def baseUrl = sh(script: "echo '${stackOutputs}' | jq -r '.[] | select(.OutputKey==\"BaseUrlApi\") | .OutputValue'", returnStdout: true).trim()
