@@ -29,9 +29,13 @@ pipeline{
         }
         stage('Deploy') {
             steps {
+
                 script {
 
                     sh """
+                        git clone https://github.com/manulis/todo-list-aws-config
+                        rm -rf samconfig.toml
+                        mv todo-list-aws-config/samconfig.toml .
                         set +e
                         sam deploy --stack-name todo-list-aws \
                                 --region us-east-1 \
@@ -103,6 +107,7 @@ pipeline{
         }
 
     }
+
     post {
         always {
             echo "Cleaning workspace"
