@@ -1,0 +1,185 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Get Code') {
+            steps {
+                script {
+                    def branch = env.GIT_BRANCH
+                    if (branch == 'develop') {
+                        git branch: 'develop', url: 'https://github.com/manulis/todo-list-aws'
+                    } else if (branch == 'main') {
+                        git branch: 'main', url: 'https://github.com/manulis/todo-list-aws'
+                    }
+                }
+            }
+        }
+
+        stage('Static Test') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    sh 'python3 -m flake8 --exit-zero --format=pylint src > flake8.out'
+                    recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [
+                        [threshold: 8, type: 'TOTAL', unstable: true],
+                        [threshold: 10, type: 'TOTAL', unstable: false]
+                    ]
+                    sh 'rm -rf flake8.out'
+                    sh 'python3 -m bandit  -r src -o bandit.out -f custom --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}"'
+                    recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [
+                        [threshold: 2, type: 'TOTAL', unstable: true],
+                        [threshold: 4, type: 'TOTAL', unstable: false]
+                    ]
+                    sh 'rm -rf bandit.out'
+                }
+            }
+        }
+
+        stage('Deploy Develop') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    sh """
+                        git clone -b staging --single-branch https://github.com/manulis/todo-list-aws-config
+
+                        mv todo-list-aws-config/samconfig.toml .
+
+                        sam build
+
+                        set +e
+                        sam deploy --stack-name todo-list-aws \
+                                --region us-east-1 \
+                                --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
+                                --s3-prefix todo-list-aws \
+                                --no-confirm-changeset \
+                                --stack-name todo-list-aws-staging \
+                                --config-env staging
+                        set -e
+                    """
+
+                    def stackOutputs = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs' --output json", returnStdout: true).trim()
+                    echo "Outputs del stack: ${stackOutputs}"
+
+                    def baseUrl = sh(script: "echo '${stackOutputs}' | jq -r '.[] | select(.OutputKey==\"BaseUrlApi\") | .OutputValue'", returnStdout: true).trim()
+                    env.BASE_URL = baseUrl
+                    echo "Base URL: ${env.BASE_URL}"
+
+                    sh '''
+                        rm -rf samconfig.toml
+                        rm -r todo-list-aws-config
+                    '''
+                }
+            }
+        }
+
+        stage('Rest Test Develop') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                sh 'python3 -m pytest --junitxml=result-rest.xml test/integration/todoApiTest.py'
+                junit 'result-rest.xml'
+                sh 'rm -rf result-rest.xml'
+            }
+        }
+
+        stage('Promote') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        withCredentials([usernamePassword(credentialsId: 'git-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            def encodedPassword = URLEncoder.encode("$GIT_PASSWORD", 'UTF-8')
+
+                            sh "git config user.email manulisdesable@gmail.com"
+                            sh "git config user.name manulis"
+
+                            def timestamp = sh(script: "date '+%Y-%m-%d %H:%M:%S'", returnStdout: true).trim()
+
+                            sh """
+                                echo "=========================" >> ci-promote.log
+                                echo "Fecha: ${timestamp}" >> ci-promote.log
+                                echo "Promoción de cambios a master" >> ci-promote.log
+                                echo "Último commit:" >> ci-promote.log
+                                git log -1 --pretty=format:'%h - %s (%an, %ar)' >> ci-promote.log
+                                echo "" >> ci-promote.log
+                            """
+
+                            sh "git status"
+                            sh "git add -A"
+                            sh 'git commit -m "CI"'
+                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
+                            sh "git checkout master"
+                            sh 'git merge develop -m "[UP] Promocionando cambios a master"'
+                            sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    sh """
+                        git clone -b staging --single-branch https://github.com/manulis/todo-list-aws-config
+
+                        mv todo-list-aws-config/samconfig.toml .
+
+                        sam build
+
+                        set +e
+                        sam deploy --stack-name todo-list-aws \
+                                    --region us-east-1 \
+                                    --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
+                                    --s3-prefix todo-list-aws \
+                                    --no-confirm-changeset \
+                                    --stack-name todo-list-aws-production \
+                                    --config-env production
+                        set -e
+                    """
+
+                    def stackOutputs = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-production --query 'Stacks[0].Outputs' --output json", returnStdout: true).trim()
+                    echo "Outputs del stack: ${stackOutputs}"
+
+                    def baseUrl = sh(script: "echo '${stackOutputs}' | jq -r '.[] | select(.OutputKey==\"BaseUrlApi\") | .OutputValue'", returnStdout: true).trim()
+                    env.BASE_URL = baseUrl
+                    echo "Base URL: ${env.BASE_URL}"
+
+                    sh '''
+                        rm -rf samconfig.toml
+                        rm -r todo-list-aws-config
+                    '''
+                }
+            }
+        }
+
+        stage('Rest Test Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh 'python3 -m pytest --junitxml=result-rest.xml -k "not deletetodo and not updatetodo and not addtodo" -s test/integration/todoApiTest.py'
+                junit 'result-rest.xml'
+                sh 'rm -rf result-rest.xml'
+            }
+        }
+
+    }
+
+    post {
+        always {
+            echo "Cleaning workspace"
+            deleteDir()
+        }
+    }
+}
