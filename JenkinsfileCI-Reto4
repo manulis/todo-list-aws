@@ -35,7 +35,7 @@ pipeline{
                     sh """
                         git clone https://github.com/manulis/todo-list-aws-config
                         rm -rf samconfig.toml
-                        mv todo-list-aws-config/todo-list-aws-config .
+                        mv todo-list-aws-config/samconfig.toml .
                         set +e
                         sam deploy --stack-name todo-list-aws \
                                 --region us-east-1 \
