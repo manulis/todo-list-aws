@@ -12,7 +12,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        git clone -b staging --single-branch https://github.com/manulis/todo-list-aws-config
+                        git clone -b production --single-branch https://github.com/manulis/todo-list-aws-config
 
                         mv todo-list-aws-config/samconfig.toml .
 
