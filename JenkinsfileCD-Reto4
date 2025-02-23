@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Get Code') {
+            steps {
+                git branch: 'master', url: 'https://github.com/manulis/todo-list-aws'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    sh """
+                        sam build
+
+                        set +e
+                        sam deploy --stack-name todo-list-aws \
+                                    --region us-east-1 \
+                                    --s3-bucket "aws-sam-cli-managed-default-samclisourcebucket-j3nhssd0pxbn" \
+                                    --s3-prefix todo-list-aws \
+                                    --no-confirm-changeset \
+                                    --stack-name todo-list-aws-production \
+                                    --config-env production
+                        set -e
+                    """
+                    
+                    def stackOutputs = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-production --query 'Stacks[0].Outputs' --output json", returnStdout: true).trim()
+                    echo "Outputs del stack: ${stackOutputs}"
+
+                    def baseUrl = sh(script: "echo '${stackOutputs}' | jq -r '.[] | select(.OutputKey==\"BaseUrlApi\") | .OutputValue'", returnStdout: true).trim()
+                    env.BASE_URL = baseUrl
+                    echo "Base URL: ${env.BASE_URL}"
+                }
+            }
+        }
+
+        stage('Rest Test') {
+            steps {
+                sh 'python3 -m pytest --junitxml=result-rest.xml -k "not deletetodo and not updatetodo and not addtodo" -s test/integration/todoApiTest.py'
+                junit 'result-rest.xml'
+                sh 'rm -rf result-rest.xml'
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                cleanWs()
+            }
+        }
+    }
+}
