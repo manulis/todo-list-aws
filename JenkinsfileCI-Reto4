@@ -29,10 +29,11 @@ pipeline{
         }
         stage('Deploy') {
             steps {
-                git branch: 'staging', url: 'https://github.com/manulis/todo-list-aws-config'
+
                 script {
 
                     sh """
+                        git clone https://github.com/manulis/todo-list-aws-config
                         rm -rf samconfig.toml
                         mv todo-list-aws-config/todo-list-aws-config .
                         set +e
