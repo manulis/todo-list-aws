@@ -4,6 +4,12 @@ pipeline {
     stages {
         stage('Get Code') {
             steps {
+                sh '''
+                    echo "Get Code Agent"
+                    whoami
+                    hostname
+                    echo ${WORKSPACE}
+                '''
                 git branch: 'master', url: 'https://github.com/manulis/todo-list-aws'
             }
         }
@@ -12,6 +18,12 @@ pipeline {
             agent { label 'agent2' }
             steps {
                 script {
+                    sh '''
+                        echo "Deploy Agent"
+                        whoami
+                        hostname
+                        echo ${WORKSPACE}
+                    '''
                     sh """
                         sam build
 
@@ -44,6 +56,12 @@ pipeline {
             agent { label 'agent1' }
             steps {
                 script {
+                    sh '''
+                        echo "Static Test Agent"
+                        whoami
+                        hostname
+                        echo ${WORKSPACE}
+                    '''
 
                     unstash 'base_url_stash'
                     def baseUrl = readFile('base_url.txt').trim()
