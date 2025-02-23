@@ -33,8 +33,8 @@ pipeline{
                 script {
 
                     sh """
-                        git clone https://github.com/manulis/todo-list-aws-config
-                        rm -rf samconfig.toml
+                        git clone -b staging --single-branch https://github.com/manulis/todo-list-aws-config
+
                         mv todo-list-aws-config/samconfig.toml .
                         set +e
                         sam deploy --stack-name todo-list-aws \
@@ -45,6 +45,7 @@ pipeline{
                                 --stack-name todo-list-aws-staging \
                                 --config-env staging
                         set -e
+
                     """
                     
 
@@ -59,6 +60,12 @@ pipeline{
                     env.BASE_URL = baseUrl
 
                     echo "Base URL: ${env.BASE_URL}"
+
+                    sh '''
+                        rm -rf samconfig.toml
+                        rm -r todo-list-aws-config
+                    
+                    '''
                 }
             }
         }
