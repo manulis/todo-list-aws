@@ -115,6 +115,7 @@ pipeline {
                             sh "git add -A"
                             sh 'git commit -m "CI"'
                             sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
+                            sh "git fetch --all"
                             sh "git checkout master"
                             sh 'git merge develop -m "[UP] Promocionando cambios a master"'
                             sh "git push https://${GIT_USERNAME}:${encodedPassword}@github.com/${GIT_USERNAME}/todo-list-aws.git"
@@ -126,7 +127,7 @@ pipeline {
 
         stage('Deploy Production') {
             when {
-                branch 'main'
+                branch 'master'
             }
             steps {
                 script {
@@ -165,7 +166,7 @@ pipeline {
 
         stage('Rest Test Production') {
             when {
-                branch 'main'
+                branch 'master'
             }
             steps {
                 sh 'python3 -m pytest --junitxml=result-rest.xml -k "not deletetodo and not updatetodo and not addtodo" -s test/integration/todoApiTest.py'
