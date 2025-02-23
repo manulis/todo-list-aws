@@ -36,6 +36,9 @@ pipeline{
                         git clone -b staging --single-branch https://github.com/manulis/todo-list-aws-config
 
                         mv todo-list-aws-config/samconfig.toml .
+
+                        sam build
+
                         set +e
                         sam deploy --stack-name todo-list-aws \
                                 --region us-east-1 \
