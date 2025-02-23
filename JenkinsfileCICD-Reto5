@@ -127,7 +127,7 @@ pipeline {
 
         stage('Deploy Production') {
             when {
-                branch 'main'
+                branch 'master'
             }
             steps {
                 script {
@@ -166,7 +166,7 @@ pipeline {
 
         stage('Rest Test Production') {
             when {
-                branch 'main'
+                branch 'master'
             }
             steps {
                 sh 'python3 -m pytest --junitxml=result-rest.xml -k "not deletetodo and not updatetodo and not addtodo" -s test/integration/todoApiTest.py'
